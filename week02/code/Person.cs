@@ -1,9 +1,9 @@
 public class Person
 {
-    public readonly string Name;
+    public string Name { get; set; }
     public int Turns { get; set; }
 
-    internal Person(string name, int turns)
+    public Person(string name, int turns)
     {
         Name = name;
         Turns = turns;
