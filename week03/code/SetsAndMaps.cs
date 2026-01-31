@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 public static class SetsAndMaps
 {
@@ -21,8 +22,26 @@ public static class SetsAndMaps
     /// <param name="words">An array of 2-character words (lowercase, no duplicates)</param>
     public static string[] FindPairs(string[] words)
     {
-        // TODO Problem 1 - ADD YOUR CODE HERE
-        return [];
+        var result = new List<string>();
+        var seen = new HashSet<string>();
+
+        foreach (var word in words)
+        {
+            // Reverse the 2-character word
+            string reversed = new string(new char[] { word[1], word[0] });
+
+            // If the reverse is in the set, we found a symmetric pair
+            if (seen.Contains(reversed))
+            {
+                result.Add($"{word} & {reversed}");
+            }
+            else
+            {
+                // Add the current word to the set for future matches
+                seen.Add(word);
+            }
+        }
+        return result.ToArray();
     }
 
     /// <summary>
@@ -42,9 +61,15 @@ public static class SetsAndMaps
         foreach (var line in File.ReadLines(filename))
         {
             var fields = line.Split(",");
-            // TODO Problem 2 - ADD YOUR CODE HERE
+            if (fields.Length >= 4)
+            {
+                string degree = fields[3].Trim();
+                if (degrees.ContainsKey(degree))
+                    degrees[degree]++;
+                else
+                    degrees[degree] = 1;
+            }
         }
-
         return degrees;
     }
 
@@ -66,8 +91,26 @@ public static class SetsAndMaps
     /// </summary>
     public static bool IsAnagram(string word1, string word2)
     {
-        // TODO Problem 3 - ADD YOUR CODE HERE
-        return false;
+        // Normalize: remove spaces and convert to lowercase
+        string s1 = word1.Replace(" ", "").ToLower();
+        string s2 = word2.Replace(" ", "").ToLower();
+
+        if (s1.Length != s2.Length) return false;
+
+        var counts = new Dictionary<char, int>();
+
+        foreach (char c in s1)
+        {
+            counts[c] = counts.GetValueOrDefault(c) + 1;
+        }
+
+        foreach (char c in s2)
+        {
+            if (!counts.ContainsKey(c) || counts[c] == 0) return false;
+            counts[c]--;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -89,6 +132,8 @@ public static class SetsAndMaps
         const string uri = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson";
         using var client = new HttpClient();
         using var getRequestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+
+        // Send the request and get the response stream
         using var jsonStream = client.Send(getRequestMessage).Content.ReadAsStream();
         using var reader = new StreamReader(jsonStream);
         var json = reader.ReadToEnd();
@@ -101,6 +146,18 @@ public static class SetsAndMaps
         // on those classes so that the call to Deserialize above works properly.
         // 2. Add code below to create a string out each place a earthquake has happened today and its magitude.
         // 3. Return an array of these string descriptions.
-        return [];
+
+        if (featureCollection?.Features == null)
+            return Array.Empty<string>();
+
+        var results = new List<string>();
+        foreach (var feature in featureCollection.Features)
+        {
+            
+            results.Add($"{feature.Properties.Place} - Mag {feature.Properties.Mag}");
+        }
+
+        return results.ToArray();    
+
     }
 }
